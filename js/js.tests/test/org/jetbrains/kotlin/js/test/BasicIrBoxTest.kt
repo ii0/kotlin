@@ -27,7 +27,7 @@ private val runtimeSources = listOfKtFilesFrom(
 )
 
 private var runtimeResult: Result? = null
-private val runtimeFile = File("js/js.translator/testData/out/irBox/testRuntime.js")
+private var runtimeFile: File? = null
 
 abstract class BasicIrBoxTest(
     pathToTestDir: String,
@@ -69,7 +69,9 @@ abstract class BasicIrBoxTest(
             myConfiguration.languageVersionSettings = LanguageVersionSettingsImpl(LanguageVersion.LATEST_STABLE, ApiVersion.LATEST_STABLE)
 
             runtimeResult = compile(config.project, runtimeSources.map(::createPsiFile), myConfiguration)
-            runtimeFile.writeText(runtimeResult!!.generatedCode)
+            runtimeFile = File(testGroupOutputDirForCompilation, "testRuntime.js").apply {
+                writeText(runtimeResult!!.generatedCode)
+            }
         }
 
         val result = compile(
@@ -92,7 +94,8 @@ abstract class BasicIrBoxTest(
         withModuleSystem: Boolean
     ) {
         // TODO: should we do anything special for module systems?
-        super.runGeneratedCode(listOf(runtimeFile.path) + jsFiles, null, null, testFunction, expectedResult, false)
+        // TODO: cache runtime.js and don't load kotlin.js & co for IR
+        super.runGeneratedCode(listOf(runtimeFile!!.path) + jsFiles, null, null, testFunction, expectedResult, false)
     }
 }
 
